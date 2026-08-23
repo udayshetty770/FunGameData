@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>okay so... about that fight</title>
+
+<!-- Google Fonts: Fredoka for playful display headings, Inter for clean body text -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================
+     CSS VARIABLES — edit these to re-theme everything
+     ============================================ */
+  :root {
+    --bg: #0f0f14;
+    --bg-soft: #16151d;
+    --pink: #ff6fa5;
+    --purple: #a37bff;
+    --red: #ff5d7a;
+    --glow: #ff8fb8;
+    --text: #f3f0f7;
+    --text-dim: #b8b3c4;
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --font-display: 'Fredoka', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --radius: 22px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+    background: var(--bg);
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: var(--font-body);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(163,123,255,0.14), transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(255,111,165,0.14), transparent 45%),
+      var(--bg);
+  }
+
+  /* ============================================
+     BACKGROUND PARTICLES (floating hearts + stars)
+     ============================================ */
+  #bg-particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .particle {
+    position: absolute;
+    bottom: -10%;
+    opacity: 0;
+    animation: float-up linear infinite;
+    filter: drop-shadow(0 0 6px rgba(255, 143, 184, 0.35));
+  }
+
+  @keyframes float-up {
+    0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.55; }
+    90%  { opacity: 0.4; }
+    100% { transform: translateY(-115vh) translateX(var(--drift, 20px)) rotate(25deg); opacity: 0; }
+  }
+
+  /* ============================================
+     APP SHELL / SCREENS
+     ============================================ */
+  #app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    padding: 28px 20px 40px;
+  }
+
+  .screen {
+    display: none;
+    animation: screen-in 0.6s ease forwards;
+  }
+
+  .screen.active { display: block; }
+
+  @keyframes screen-in {
+    from { opacity: 0; transform: translateY(18px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .screen.leaving {
+    animation: screen-out 0.35s ease forwards;
+  }
+
+  @keyframes screen-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(-14px) scale(0.98); }
+  }
+
+  /* ============================================
+     GLASS CARD
+     ============================================ */
+  .card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    padding: 38px 30px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pink);
+    opacity: 0.85;
+    margin-bottom: 14px;
+  }
+
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  h1 {
+    font-size: clamp(1.7rem, 6vw, 2.3rem);
+    background: linear-gradient(120deg, var(--pink), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 5vw, 1.7rem);
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: 1.02rem;
+    line-height: 1.65;
+    color: var(--text-dim);
+    margin-top: 12px;
+  }
+
+  p.emphasis {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .typed-line {
+    min-height: 1.7em;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--glow);
+    margin-left: 2px;
+    vertical-align: -0.15em;
+    animation: blink 0.9s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ============================================
+     BUTTONS
+     ============================================ */
+  .btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--bg);
+    background: linear-gradient(120deg, var(--pink), var(--purple));
+    border: none;
+    padding: 15px 30px;
+    border-radius: 999px;
+    cursor: pointer;
+    margin-top: 26px;
+    min-height: 48px;
+    min-width: 48px;
+    box-shadow: 0 0 0 rgba(255, 111, 165, 0);
+    transition: transform 0.18s ease, box-shadow 0.25s ease, filter 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(255, 111, 165, 0.35);
+    filter: brightness(1.06);
+  }
+
+  .btn:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .btn.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+    box-shadow: none;
+  }
+
+  .btn.ghost:hover {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+  }
+
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .fine-print {
+    margin-top: 16px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    opacity: 0.7;
+  }
+
+  /* ============================================
+     SCREEN 3 — HEART CATCH MINI GAME
+     ============================================ */
+  .game-zone {
+    position: relative;
+    height: 220px;
+    margin: 22px 0 8px;
+    border-radius: 16px;
+    border: 1px dashed var(--glass-border);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .catch-heart {
+    position: absolute;
+    font-size: 2.1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+    filter: drop-shadow(0 0 10px rgba(255, 93, 122, 0.55));
+    animation: bob 2.4s ease-in-out infinite;
+    -webkit-tap-highlight-color: transparent;
+    padding: 6px;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .catch-heart.popped {
+    animation: pop-out 0.45s ease forwards;
+    pointer-events: none;
+  }
+
+  @keyframes pop-out {
+    to { transform: scale(1.7); opacity: 0; }
+  }
+
+  .burst-particle {
+    position: absolute;
+    font-size: 0.9rem;
+    pointer-events: none;
+    animation: burst 0.6s ease-out forwards;
+  }
+
+  @keyframes burst {
+    to {
+      transform: translate(var(--bx), var(--by)) scale(0.4);
+      opacity: 0;
+    }
+  }
+
+  .sorry-meter {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--glow);
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ============================================
+     SCREEN 4 — REVEAL TEXT ANIMATION
+     ============================================ */
+  .reveal-line {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal-line.shown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ============================================
+     SCREEN 5 — BIG TEXT
+     ============================================ */
+  .big-text {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
+    font-weight: 700;
+    background: linear-gradient(120deg, var(--red), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin: 10px 0;
+  }
+
+  /* ============================================
+     CONFETTI (final screen)
+     ============================================ */
+  #confetti-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    top: -5%;
+    border-radius: 2px;
+    animation: confetti-fall linear forwards;
+  }
+
+  @keyframes confetti-fall {
+    to {
+      transform: translateY(110vh) rotate(var(--spin, 360deg));
+      opacity: 0.9;
+    }
+  }
+
+  .final-heart {
+    position: fixed;
+    bottom: -8%;
+    pointer-events: none;
+    z-index: 5;
+    animation: final-float linear forwards;
+  }
+
+  @keyframes final-float {
+    to { transform: translateY(-120vh) translateX(var(--drift, 0px)); opacity: 0; }
+  }
+
+  footer.credit {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+
+  /* ============================================
+     ACCESSIBILITY: reduced motion
+     ============================================ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Keyboard focus visibility */
+  button:focus-visible {
+    outline: 2px solid var(--glow);
+    outline-offset: 3px;
+  }
+
+  /* ============================================
+     RUNAWAY "I need more convincing" BUTTON
+     ============================================ */
+  .btn.dodging {
+    position: fixed;
+    z-index: 30;
+    margin-top: 0;
+    transition: left 0.22s ease, top 0.22s ease, transform 0.18s ease;
+  }
+
+  .btn.vanished {
+    opacity: 0 !important;
+    transform: scale(0.6);
+    pointer-events: none !important;
+  }
+
+  #s5-taunt {
+    min-height: 1.4em;
+    margin-top: 14px;
+    font-size: 0.92rem;
+    color: var(--glow);
+  }
+
+  /* ============================================
+     RESPONSIVE / MOBILE-FRIENDLY BREAKPOINTS
+     ============================================ */
+  @media (max-width: 480px) {
+    #app { padding: 18px 14px 30px; }
+    .card { padding: 28px 18px; border-radius: 18px; }
+    h1 { font-size: clamp(1.5rem, 7vw, 2rem); }
+    h2 { font-size: clamp(1.15rem, 5.5vw, 1.45rem); }
+    p { font-size: 0.96rem; margin-top: 10px; }
+    .btn { padding: 14px 22px; font-size: 0.94rem; margin-top: 20px; }
+    .btn-row { gap: 10px; }
+    .game-zone { height: 190px; margin: 18px 0 6px; }
+    .catch-heart { font-size: 1.9rem; }
+    .big-text { font-size: clamp(2rem, 13vw, 2.6rem); }
+    .eyebrow { font-size: 0.7rem; }
+  }
+
+  @media (max-width: 360px) {
+    #app { padding: 14px 10px 24px; }
+    .card { padding: 22px 14px; }
+    .game-zone { height: 170px; }
+  }
+
+  /* short viewports (landscape phones, small laptops) */
+  @media (max-height: 700px) {
+    #app { padding-top: 14px; padding-bottom: 20px; }
+    .card { padding: 22px 20px; }
+    p { margin-top: 8px; }
+    .btn { margin-top: 16px; }
+    .game-zone { height: 160px; margin: 14px 0 6px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating background particles (hearts + stars), populated by JS -->
+<div id="bg-particles" aria-hidden="true"></div>
+
+<!-- Confetti / final hearts layer -->
+<div id="confetti-layer" aria-hidden="true"></div>
+
+<main id="app">
+
+  <!-- ===================== SCREEN 1 — INTRO ===================== -->
+  <section class="screen active" id="screen-1">
+    <div class="card">
+      <div class="eyebrow">a small production, just for you</div>
+      <h1 id="s1-title"></h1>
+      <p class="typed-line" id="s1-typed"><span class="cursor" id="s1-cursor"></span></p>
+      <button class="btn" id="s1-btn" style="opacity:0; pointer-events:none;">Okay, I'm listening →</button>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 2 — THE REASON ===================== -->
+  <section class="screen" id="screen-2">
+    <div class="card">
+      <h2>Okay... I messed up.</h2>
+      <p id="s2-line1" class="reveal-line">We had a small fight, and honestly, I could've handled things better.</p>
+      <p id="s2-line2" class="reveal-line">So instead of sending a boring "I'm sorry" text...</p>
+      <p id="s2-line3" class="reveal-line emphasis">I made this. 😶</p>
+      <button class="btn" id="s2-btn" style="opacity:0; pointer-events:none;">Continue →</button>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 3 — MINI GAME ===================== -->
+  <section class="screen" id="screen-3">
+    <div class="card">
+      <h2>First, I need to prove I put some effort into this.</h2>
+      <p>Catch 3 hearts ❤️</p>
+      <div class="game-zone" id="game-zone"></div>
+      <div class="sorry-meter" id="sorry-meter">Sorry level: 0/3</div>
+      <p id="s3-outro" style="display:none;">Okay... you've officially made me work for this apology 😂</p>
+      <button class="btn" id="s3-btn" style="display:none;">Now for the serious part →</button>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 4 — THE REAL APOLOGY ===================== -->
+  <section class="screen" id="screen-4">
+    <div class="card">
+      <h2>I'm genuinely sorry.</h2>
+      <p id="s4-l1" class="reveal-line">I didn't mean to upset you or make things weird between us.</p>
+      <p id="s4-l2" class="reveal-line">Sometimes I say or do things without thinking enough, and this time I messed up.</p>
+      <p id="s4-l3" class="reveal-line">I'm not here to make excuses or prove that I was right. I just wanted to say that I'm sorry.</p>
+      <p id="s4-l4" class="reveal-line">You matter to me as a friend, and I really don't want a small fight to ruin the good vibe between us.</p>
+      <p id="s4-l5" class="reveal-line emphasis">So... yeah. I'm really, genuinely sorry. ❤️</p>
+      <button class="btn" id="s4-btn" style="opacity:0; pointer-events:none;">One last thing →</button>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 5 — LIGHTHEARTED ENDING ===================== -->
+  <section class="screen" id="screen-5">
+    <div class="card">
+      <p class="reveal-line shown">Okay, apology delivered.</p>
+      <p class="reveal-line shown">Now I'm officially out of excuses. 😂</p>
+      <p class="reveal-line shown">All I can say is...</p>
+      <div class="big-text">MY BAD. 😭</div>
+      <p class="reveal-line shown emphasis">Sorry.</p>
+
+      <div id="s5-buttons-1" class="btn-row">
+        <button class="btn" id="s5-accept-btn">Okay, apology accepted 🤝</button>
+        <button class="btn ghost" id="s5-more-btn" type="button">I need more convincing 😌</button>
+      </div>
+      <p id="s5-taunt" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 6 — FINAL ===================== -->
+  <section class="screen" id="screen-6">
+    <div class="card">
+      <div class="big-text" style="font-size:clamp(2rem, 10vw, 2.8rem);">THANK YOU 😭❤️</div>
+      <p class="reveal-line shown emphasis">That means a lot.</p>
+      <p class="reveal-line shown">I'll try to do better next time.</p>
+      <p class="reveal-line shown emphasis">Deal? 🤝</p>
+    </div>
+    <footer class="credit">Made with HTML, CSS, JavaScript &amp; a little bit of guilt. 😂</footer>
+  </section>
+
+</main>
+
+<script>
+/* ==========================================================================
+   CONFIG — the stuff you'll probably want to customize is right here
+   ========================================================================== */
+const CONFIG = {
+  friendName: "", // e.g. "Riya" — leave blank to keep it name-free
+};
+
+/* ==========================================================================
+   SCREEN NAVIGATION
+   ========================================================================== */
+function goToScreen(fromId, toId, onActive) {
+  const from = document.getElementById(fromId);
+  const to = document.getElementById(toId);
+
+  from.classList.add('leaving');
+  from.addEventListener('animationend', function handler() {
+    from.classList.remove('active', 'leaving');
+    from.removeEventListener('animationend', handler);
+    to.classList.add('active');
+    to.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo(0, 0);
+    // Wait a frame so layout (widths/heights) is settled before any
+    // code tries to measure the now-visible screen (e.g. the heart game).
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (onActive) onActive();
+    }));
+  }, { once: true });
+}
+
+/* ==========================================================================
+   TINY SOUND EFFECTS (WebAudio — no external files)
+   ========================================================================== */
+let audioCtx = null;
+function playBlip(freq = 520, duration = 0.09, type = 'sine', volume = 0.05) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (e) { /* audio not available, fail silently */ }
+}
+
+/* ==========================================================================
+   SCREEN 1 — TYPING ANIMATION
+   ========================================================================== */
+function typeText(el, text, speed, onDone) {
+  let i = 0;
+  const cursor = el.querySelector('.cursor');
+  function step() {
+    if (i < text.length) {
+      cursor.insertAdjacentText('beforebegin', text[i]);
+      i++;
+      setTimeout(step, speed);
+    } else if (onDone) {
+      onDone();
+    }
+  }
+  step();
+}
+
+function initScreen1() {
+  const titleEl = document.getElementById('s1-title');
+  const typedEl = document.getElementById('s1-typed');
+  const btn = document.getElementById('s1-btn');
+
+  // "Hey... 👀" typed first
+  const titleSpan = document.createElement('span');
+  titleSpan.className = 'typed-line';
+  titleSpan.innerHTML = '<span class="cursor"></span>';
+  titleEl.appendChild(titleSpan);
+
+  typeText(titleSpan, 'Hey... 👀', 55, () => {
+    titleSpan.querySelector('.cursor').remove();
+    setTimeout(() => {
+      typeText(typedEl, 'Before you say anything, just give me 30 seconds.', 28, () => {
+        document.getElementById('s1-cursor').style.display = 'none';
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+      });
+    }, 500);
+  });
+}
+
+/* ==========================================================================
+   SCREEN 2 — SEQUENTIAL REVEAL
+   ========================================================================== */
+function revealSequence(ids, gap, onDone) {
+  ids.forEach((id, index) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('shown');
+      if (index === ids.length - 1 && onDone) {
+        setTimeout(onDone, gap);
+      }
+    }, gap * index);
+  });
+}
+
+function initScreen2() {
+  revealSequence(['s2-line1', 's2-line2', 's2-line3'], 900, () => {
+    const btn = document.getElementById('s2-btn');
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  });
+}
+
+/* ==========================================================================
+   SCREEN 3 — HEART CATCH MINI GAME
+   ========================================================================== */
+let heartsCaught = 0;
+const HEARTS_TOTAL = 3;
+
+function spawnHeart(zone, index, total) {
+  const heart = document.createElement('button');
+  heart.className = 'catch-heart';
+  heart.type = 'button';
+  heart.setAttribute('aria-label', 'Catch this heart');
+  heart.textContent = '❤️';
+
+  const zoneRect = zone.getBoundingClientRect();
+  const size = 46;
+  const maxX = Math.max(zoneRect.width - size, 0);
+  const maxY = Math.max(zoneRect.height - size, 0);
+
+  // Split the zone into equal-width slots (one per heart) so random
+  // placement still spreads the hearts out instead of clustering them.
+  const slotWidth = maxX / total;
+  const slotStart = slotWidth * index;
+  const x = slotStart + Math.random() * Math.max(slotWidth - size * 0.4, 0);
+  const y = Math.random() * maxY;
+
+  heart.style.left = Math.min(x, maxX) + 'px';
+  heart.style.top = y + 'px';
+  heart.style.animationDelay = (index * 0.3) + 's';
+
+  heart.addEventListener('click', () => catchHeart(heart, zone), { once: true });
+  zone.appendChild(heart);
+}
+
+function catchHeart(heart, zone) {
+  if (heart.classList.contains('popped')) return;
+  heart.classList.add('popped');
+  playBlip(700 + heartsCaught * 120, 0.12, 'triangle', 0.06);
+
+  // particle burst
+  const rect = heart.getBoundingClientRect();
+  const zoneRect = zone.getBoundingClientRect();
+  const cx = rect.left - zoneRect.left + rect.width / 2;
+  const cy = rect.top - zoneRect.top + rect.height / 2;
+  const symbols = ['✨', '💫', '❤️', '⭐'];
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('span');
+    p.className = 'burst-particle';
+    p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    const angle = (Math.PI * 2 * i) / 6;
+    const dist = 40 + Math.random() * 20;
+    p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+    zone.appendChild(p);
+    setTimeout(() => p.remove(), 650);
+  }
+
+  setTimeout(() => heart.remove(), 460);
+
+  heartsCaught++;
+  document.getElementById('sorry-meter').textContent = `Sorry level: ${heartsCaught}/${HEARTS_TOTAL}`;
+
+  if (heartsCaught === HEARTS_TOTAL) {
+    setTimeout(() => {
+      document.getElementById('s3-outro').style.display = 'block';
+      const btn = document.getElementById('s3-btn');
+      btn.style.display = 'inline-block';
+      btn.style.opacity = '0';
+      requestAnimationFrame(() => { btn.style.transition = 'opacity 0.5s ease'; btn.style.opacity = '1'; });
+    }, 500);
+  }
+}
+
+function initScreen3() {
+  const zone = document.getElementById('game-zone');
+  zone.innerHTML = '';
+  heartsCaught = 0;
+  document.getElementById('sorry-meter').textContent = `Sorry level: 0/${HEARTS_TOTAL}`;
+  document.getElementById('s3-outro').style.display = 'none';
+  const btn = document.getElementById('s3-btn');
+  btn.style.display = 'none';
+
+  // Randomize which slot each heart lands in, not just its position within the slot.
+  const slots = Array.from({ length: HEARTS_TOTAL }, (_, i) => i);
+  for (let i = slots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [slots[i], slots[j]] = [slots[j], slots[i]];
+  }
+  slots.forEach((slot, i) => spawnHeart(zone, slot, HEARTS_TOTAL));
+}
+
+/* ==========================================================================
+   SCREEN 4 — SEQUENTIAL REVEAL (the real apology)
+   ========================================================================== */
+function initScreen4() {
+  revealSequence(['s4-l1', 's4-l2', 's4-l3', 's4-l4', 's4-l5'], 1000, () => {
+    const btn = document.getElementById('s4-btn');
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  });
+}
+
+/* ==========================================================================
+   SCREEN 5 — RUNAWAY "MORE CONVINCING" BUTTON
+   The button dodges the cursor/finger every time she goes near it, and
+   after a few dodges it vanishes completely — making the point that
+   "apology accepted" is the only option left.
+   ========================================================================== */
+const MAX_DODGES = 4;
+const TAUNTS = [
+  "Nope. 😏",
+  "Not today. 😌",
+  "You're fast, but I'm faster. 😂",
+  "Almost had it.",
+  "Yeah... it's not happening. 😭"
+];
+
+let dodgeCount = 0;
+let dodgeArmed = false;
+
+function clampPosition(elWidth, elHeight) {
+  const margin = 14;
+  const maxLeft = Math.max(window.innerWidth - elWidth - margin, margin);
+  const maxTop = Math.max(window.innerHeight - elHeight - margin, margin);
+  const left = margin + Math.random() * (maxLeft - margin);
+  const top = margin + Math.random() * (maxTop - margin);
+  return { left, top };
+}
+
+function dodgeButton(btn, taunt) {
+  if (dodgeCount >= MAX_DODGES) return;
+
+  const rect = btn.getBoundingClientRect();
+  if (!btn.classList.contains('dodging')) {
+    btn.classList.add('dodging');
+    // lock in the current visual position first so the transition starts from here
+    btn.style.left = rect.left + 'px';
+    btn.style.top = rect.top + 'px';
+    // force reflow so the browser registers the starting position before we move it
+    void btn.offsetWidth;
+  }
+
+  const { left, top } = clampPosition(rect.width, rect.height);
+  btn.style.left = left + 'px';
+  btn.style.top = top + 'px';
+
+  dodgeCount++;
+  playBlip(380 + dodgeCount * 60, 0.09, 'square', 0.035);
+  taunt.textContent = TAUNTS[Math.min(dodgeCount - 1, TAUNTS.length - 1)];
+
+  if (dodgeCount >= MAX_DODGES) {
+    setTimeout(() => vanishButton(btn, taunt), 350);
+  }
+}
+
+function vanishButton(btn, taunt) {
+  btn.classList.add('vanished');
+  btn.setAttribute('tabindex', '-1');
+  btn.setAttribute('aria-hidden', 'true');
+  playBlip(220, 0.18, 'sine', 0.05);
+  taunt.textContent = "Guess that settles it. 😌";
+
+  setTimeout(() => {
+    goToScreen('screen-5', 'screen-6');
+    launchConfetti();
+    playBlip(660, 0.15, 'triangle', 0.07);
+  }, 1300);
+}
+
+function initScreen5() {
+  dodgeCount = 0;
+  dodgeArmed = false;
+
+  const btn = document.getElementById('s5-more-btn');
+  const taunt = document.getElementById('s5-taunt');
+
+  // reset in case this screen is ever re-entered
+  btn.className = 'btn ghost';
+  btn.removeAttribute('style');
+  btn.removeAttribute('tabindex');
+  btn.removeAttribute('aria-hidden');
+  taunt.textContent = '';
+
+  const triggerDodge = (e) => {
+    if (dodgeCount >= MAX_DODGES) return;
+    e.preventDefault();
+    dodgeButton(btn, taunt);
+  };
+
+  // Desktop: dodge as soon as the cursor gets near/on it.
+  btn.addEventListener('pointerenter', (e) => {
+    if (e.pointerType === 'mouse') triggerDodge(e);
+  });
+
+  // Mobile/touch: dodge on the very first touch instead of letting it register a tap.
+  btn.addEventListener('touchstart', triggerDodge, { passive: false });
+
+  // Keyboard users tabbing to it: dodge on focus too, so it can't be "clicked" with Enter either.
+  btn.addEventListener('focus', () => {
+    if (dodgeCount < MAX_DODGES) triggerDodge({ preventDefault: () => {} });
+  });
+
+  // Safety net: if a click ever slips through before it's fully vanished, just dodge again.
+  btn.addEventListener('click', (e) => {
+    if (dodgeCount < MAX_DODGES) {
+      triggerDodge(e);
+    } else {
+      e.preventDefault();
+    }
+  });
+}
+
+/* ==========================================================================
+   SCREEN 6 — CONFETTI + FLOATING HEARTS
+   ========================================================================== */
+function launchConfetti() {
+  const layer = document.getElementById('confetti-layer');
+  const colors = ['#ff6fa5', '#a37bff', '#ff5d7a', '#ffd166', '#ffffff'];
+  const pieceCount = 60;
+
+  for (let i = 0; i < pieceCount; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const size = 6 + Math.random() * 6;
+    piece.style.width = size + 'px';
+    piece.style.height = (size * 0.4) + 'px';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.setProperty('--spin', (Math.random() > 0.5 ? '360deg' : '-360deg'));
+    const duration = 2.6 + Math.random() * 1.8;
+    piece.style.animationDuration = duration + 's';
+    piece.style.animationDelay = (Math.random() * 0.4) + 's';
+    layer.appendChild(piece);
+    setTimeout(() => piece.remove(), (duration + 1) * 1000);
+  }
+
+  // floating hearts rising up
+  for (let i = 0; i < 14; i++) {
+    setTimeout(() => {
+      const h = document.createElement('div');
+      h.className = 'final-heart';
+      h.textContent = ['❤️', '💗', '✨'][Math.floor(Math.random() * 3)];
+      h.style.left = Math.random() * 100 + 'vw';
+      h.style.fontSize = (16 + Math.random() * 20) + 'px';
+      h.style.setProperty('--drift', (Math.random() * 80 - 40) + 'px');
+      const duration = 4 + Math.random() * 3;
+      h.style.animationDuration = duration + 's';
+      layer.appendChild(h);
+      setTimeout(() => h.remove(), duration * 1000);
+    }, i * 140);
+  }
+}
+
+/* ==========================================================================
+   BACKGROUND AMBIENT PARTICLES (hearts + stars, continuous)
+   ========================================================================== */
+function initBackgroundParticles() {
+  const container = document.getElementById('bg-particles');
+  const symbols = ['❤️', '✨', '⭐', '💫'];
+  const count = window.innerWidth < 500 ? 12 : 20;
+
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.fontSize = (10 + Math.random() * 16) + 'px';
+    p.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    const duration = 10 + Math.random() * 14;
+    p.style.animationDuration = duration + 's';
+    p.style.animationDelay = (Math.random() * duration) + 's';
+    container.appendChild(p);
+  }
+}
+
+/* ==========================================================================
+   WIRE UP NAVIGATION BUTTONS
+   ========================================================================== */
+function initNavigation() {
+  document.getElementById('s1-btn').addEventListener('click', () => {
+    playBlip(500, 0.08, 'sine', 0.04);
+    goToScreen('screen-1', 'screen-2', initScreen2);
+  });
+
+  document.getElementById('s2-btn').addEventListener('click', () => {
+    playBlip(500, 0.08, 'sine', 0.04);
+    goToScreen('screen-2', 'screen-3', initScreen3);
+  });
+
+  document.getElementById('s3-btn').addEventListener('click', () => {
+    playBlip(500, 0.08, 'sine', 0.04);
+    goToScreen('screen-3', 'screen-4', initScreen4);
+  });
+
+  document.getElementById('s4-btn').addEventListener('click', () => {
+    playBlip(500, 0.08, 'sine', 0.04);
+    goToScreen('screen-4', 'screen-5', initScreen5);
+  });
+
+  document.getElementById('s5-accept-btn').addEventListener('click', () => {
+    goToScreen('screen-5', 'screen-6');
+    launchConfetti();
+    playBlip(660, 0.15, 'triangle', 0.07);
+  });
+}
+
+/* ==========================================================================
+   INIT
+   ========================================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  initBackgroundParticles();
+  initNavigation();
+  initScreen1();
+});
+</script>
+</body>
+</html>
